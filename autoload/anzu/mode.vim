@@ -64,7 +64,15 @@ endfunction
 function! s:jump(prefix, key, suffix)
 	if !empty(a:prefix) | execute "normal!" a:prefix | endif
 	while 1
-		if !empty(a:key) | execute "normal!" a:key | endif
+" --- Improved 1/3 -----------------------------------------------------------------
+    try
+      if !empty(a:key) | execute "normal!" a:key | endif
+    catch
+      redraw | echohl Error | echom 'E486: Pattern not found: '. @/ | echohl None
+      break
+    endtry
+		"if !empty(a:key) | execute "normal!" a:key | endif
+" ----------------------------------------------------------------------------------
 		let pattern = '(\d\+/\d\+)'
 		let text = s:get_text_from_pattern(pattern)
 		if text == "" || text !~ '^' . pattern . '$'
@@ -86,6 +94,9 @@ function! anzu#mode#start(pattern, key, prefix, suffix, ...)
 		if a:key != ""
 			call s:jump(a:prefix, a:key, a:suffix)
 		endif
+" --- Improved 2/3 -----------------------------------------------------------------
+    if foldclosed(line('.')) != -1 | exe 'normal! zO' | endif
+" ----------------------------------------------------------------------------------
 		call s:hl_cursor("Cursor", getpos(".")[1:])
 	catch /^Vim\%((\a\+)\)\=:E/
 		call s:finish()
@@ -102,6 +113,9 @@ function! anzu#mode#start(pattern, key, prefix, suffix, ...)
 		else
 			call s:jump(a:prefix, char, a:suffix)
 		endif
+" --- Improved 3/3 -----------------------------------------------------------------
+    if foldclosed(line('.')) != -1 | exe 'normal! zO' | endif
+" ----------------------------------------------------------------------------------
 		call s:hl_cursor("Cursor", getpos(".")[1:])
 		redraw
 		let char = s:getchar()
